@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     const prompt = `당신은 패션 전문가입니다. 다음 사진의 데일리룩 코디를 분석하세요.
     중요 지침:
     1. 헤어나 메이크업은 점수에 거의 반영하지 말고, 옷의 조화(색상, 핏, 스타일)에 집중하세요.
-    2. 결과는 반드시 '점수:', '분석:', '강점:', '약점:' 키워드를 포함하여 답변하세요.
+    2. 결과는 반드시 '점수:', '분석:', '강점:', '개선점:' 키워드를 포함하여 답변하세요.
     3. 친절하고 전문적인 어조를 유지하세요.`;
 
     const response = await fetch(apiUrl, {
@@ -35,7 +35,7 @@ export default async function handler(req, res) {
             ]
           }
         ],
-        max_tokens: 500 // 분석 결과 길이를 제한하여 비용 절감
+        max_tokens: 600 // 분석 결과 길이를 제한하여 비용 절감
       })
     });
 
