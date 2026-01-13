@@ -71,6 +71,21 @@
                 <img id="result-img" class="w-full rounded-xl mb-6 shadow-lg border border-gray-700">
             </div>
             
+		<div class="flex justify-center mb-8">
+			<div class="relative flex items-center justify-center">
+				<svg class="w-32 h-32 transform -rotate-90">
+					<circle cx="64" cy="64" r="58" stroke="rgba(61, 169, 252, 0.1)" stroke-width="8" fill="transparent" />
+					<circle id="score-circle" cx="64" cy="64" r="58" stroke="#3da9fc" stroke-width="8" fill="transparent" 
+						stroke-dasharray="364.4" stroke-dashoffset="364.4" stroke-linecap="round"
+						class="transition-all duration-1000 ease-out" />
+				</svg>
+				<div class="absolute text-center">
+					<span id="score-display" class="text-3xl font-extrabold text-[#3da9fc]">0</span>
+					<span class="text-sm text-[#3da9fc]">점</span>
+				</div>
+			</div>
+		</div>
+
             <div id="analysis-content">
                 </div>
 			<!--전체원문추가-->
@@ -190,7 +205,29 @@
 			
 			contentArea.innerHTML = html;
 		}
+		function copyLink() {
+			const url = window.location.href;
+			navigator.clipboard.writeText(url).then(() => {
+				// 토스트 알림이나 간단한 alert
+				alert("분석 결과 링크가 복사되었습니다! 친구에게 공유해보세요.");
+			}).catch(err => {
+				console.error('복사 실패:', err);
+			});
+		}
+		if (line.startsWith("점수:")) {
+			const scoreMatch = line.match(/\d+(\.\d+)?/);
+			const score = scoreMatch ? parseFloat(scoreMatch[0]) : 0;
+			
+			// 텍스트 업데이트
+			document.getElementById('score-display').innerText = score;
 
+			// SVG 애니메이션 업데이트 (반지름 58 기준 둘레 약 364.4)
+			const circle = document.getElementById('score-circle');
+			const offset = 364.4 - (364.4 * score / 100);
+			setTimeout(() => {
+				circle.style.strokeDashoffset = offset;
+			}, 100);
+		}
     </script>
 </body>
 </html>
