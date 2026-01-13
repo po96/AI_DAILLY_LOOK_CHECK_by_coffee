@@ -154,7 +154,20 @@
         setTimeout(() => document.getElementById("step2").classList.add("active"), 800);
         setTimeout(() => document.getElementById("step3").classList.add("active"), 1600);
         setTimeout(() => document.getElementById("step4").classList.add("active"), 2400);
+		
+		window.addEventListener("DOMContentLoaded", () => {
+		  const imageBase64 = sessionStorage.getItem("uploadedImage");
 
+		  console.log("loading에서 이미지:", imageBase64);
+
+		  if (!imageBase64) {
+			alert("이미지가 없습니다. 처음 화면으로 돌아갑니다.");
+			location.href = "/index.html";
+			return;
+		  }
+
+  // 여기서 analyze API 호출
+});
         // 실제 API 호출
         const response = await fetch("/api/analyze", {
           method: "POST",

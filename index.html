@@ -214,22 +214,31 @@
       const file = imageInput.files[0];
       if (!file) return;
 
-      const reader = new FileReader();
-      reader.onload = () => {
-        previewImg.src = reader.result;
-        preview.style.display = "block";
-        analyzeBtn.disabled = false;
+function handleAnalysis() {
+  const file = document.getElementById("imageInput").files[0];
 
-        // 👉 다음 단계에서 이걸 sessionStorage에 저장
-        sessionStorage.setItem("imageBase64", reader.result);
-      };
-      reader.readAsDataURL(file);
-    });
+  if (!file) {
+    alert("이미지를 선택해주세요.");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    sessionStorage.setItem("uploadedImage", reader.result);
+
+    // ✅ 저장 확인 로그
+    console.log("이미지 저장됨", reader.result.length);
+
+    window.location.href = "/loading.html";
+  };
+  reader.readAsDataURL(file);
+}
 
     analyzeBtn.addEventListener("click", () => {
       // 다음 페이지로 이동
       window.location.href = "loading.html";
     });
+
   </script>
 
 </body>
