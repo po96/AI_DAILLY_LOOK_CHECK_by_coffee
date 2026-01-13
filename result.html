@@ -1,237 +1,90 @@
-<!DOCTYPE html>
-<html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>분석 결과</title>
-
-<link
-  rel="stylesheet"
-  as="style"
-  crossorigin
-  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css"
-/>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Pretendard', sans-serif;
-    }
-
-    body {
-	  min-height: 100vh;
-	  background: radial-gradient(circle at top, #0f2027, #0b0f1a);
-	  display: flex;
-	  justify-content: center;
-	  align-items: center;
-	  color: #ffffff;
-
-	  /* ✅ 여기만 추가 */
-	  font-family: "Pretendard", -apple-system, BlinkMacSystemFont,
-		"Segoe UI", Roboto, "Noto Sans KR", Arial, sans-serif;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 420px;
-      background: rgba(20, 30, 50, 0.85);
-      border-radius: 18px;
-      padding: 28px 24px 32px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-    }
-
-    .title {
-      text-align: center;
-      font-size: 24px;
-      font-weight: 700;
-      margin-bottom: 18px;
-    }
-
-    /* ===== 점수 ===== */
-    .score-box {
-      text-align: center;
-      margin-bottom: 22px;
-    }
-
-    .score {
-      font-size: 52px;
-      font-weight: 700;
-      color: #38bdf8;
-    }
-
-    .score-label {
-      font-size: 14px;
-      color: #b8c4d6;
-    }
-
-    /* ===== 이미지 ===== */
-    .image-box {
-      margin-bottom: 22px;
-    }
-
-    .image-box img {
-      width: 100%;
-      display: block;
-      border-radius: 14px;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.4);
-    }
-
-    /* ===== 카테고리 점수 ===== */
-    .category {
-      margin-bottom: 18px;
-    }
-
-    .category-title {
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 6px;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .bar {
-      height: 8px;
-      background: rgba(255,255,255,0.15);
-      border-radius: 6px;
-      overflow: hidden;
-    }
-
-    .bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #38bdf8, #0ea5e9);
-      width: 0%;
-      transition: width 0.6s ease;
-    }
-
-    /* ===== 텍스트 평가 ===== */
-    .section {
-      margin-top: 22px;
-    }
-
-    .section-title {
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 10px;
-    }
-
-    .text-box {
-      background: rgba(255,255,255,0.06);
-      border-radius: 12px;
-      padding: 14px;
-      font-size: 14px;
-      line-height: 1.6;
-      color: #d6e6ff;
-    }
-
-    /* ===== 버튼 ===== */
-    .btn {
-      width: 100%;
-      margin-top: 24px;
-      padding: 14px;
-      border: none;
-      border-radius: 14px;
-      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-      color: #0b0f1a;
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-  </style>
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
+    <div class="container">
+        <div id="loading">코디 분석 중...</div>
+        
+        <div id="content" style="display:none;">
+            <div class="image-box">
+                <img id="preview">
+            </div>
 
-  <div class="container">
-    <div class="title">분석 결과</div>
+            <div class="score-box">
+                <div id="scoreValue" class="score-text">0점</div>
+            </div>
 
-    <!-- 총점 -->
-    <div class="score-box">
-      <div class="score" id="totalScore">--</div>
-      <div class="score-label">총점</div>
+            <div id="analysisResult"></div>
+        </div>
     </div>
+<div id="loading">
+    <div class="loading-spinner"></div>
+    <div class="pulsing-text">AI 패션 전문가가 분석 중입니다...</div>
+    <div id="infoMessage" class="info-message">이미지의 핏을 분석하고 있어요.</div>
+</div>
+    <script>
 
-    <!-- 이미지 -->
-    <div class="image-box">
-      <img id="resultImage" />
-    </div>
+    // 로딩 중 보여줄 랜덤 메시지들
+    const messages = [
+        "상의와 하의의 실루엣을 비교하고 있어요.",
+        "전체적인 색상 조화를 체크하는 중입니다.",
+        "디테일한 액세서리 포인트를 분석하고 있어요.",
+        "현재 스타일에 맞는 최적의 조언을 준비 중입니다.",
+        "헤어보다는 옷의 핏에 더 집중하고 있어요."
+    ];
 
-    <!-- 카테고리 점수 -->
-    <div class="category">
-      <div class="category-title">
-        <span>의상</span>
-        <span id="clothingScore">--</span>
-      </div>
-      <div class="bar">
-        <div class="bar-fill" id="barClothing"></div>
-      </div>
-    </div>
+    window.onload = async () => {
+        const imageData = localStorage.getItem('tempImage');
+        document.getElementById('preview').src = imageData;
 
-    <div class="category">
-      <div class="category-title">
-        <span>헤어</span>
-        <span id="hairScore">--</span>
-      </div>
-      <div class="bar">
-        <div class="bar-fill" id="barHair"></div>
-      </div>
-    </div>
+        // 메시지 변경 타이머 시작
+        let msgIndex = 0;
+        const msgInterval = setInterval(() => {
+            msgIndex = (msgIndex + 1) % messages.length;
+            document.getElementById('infoMessage').innerText = messages[msgIndex];
+        }, 2000);
 
-    <div class="category">
-      <div class="category-title">
-        <span>메이크업</span>
-        <span id="makeupScore">--</span>
-      </div>
-      <div class="bar">
-        <div class="bar-fill" id="barMakeup"></div>
-      </div>
-    </div>
+        try {
+            const response = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: imageData })
+            });
 
-    <!-- 강점 -->
-    <div class="section">
-      <div class="section-title">강점</div>
-      <div class="text-box" id="strengthText">-</div>
-    </div>
+            const data = await response.json();
+            
+            // 데이터 수신 후 타이머 중지 및 결과 렌더링
+            clearInterval(msgInterval);
+            renderResult(data.analysis);
+        } catch (error) {
+            clearInterval(msgInterval);
+            alert("분석 실패! 다시 시도해주세요.");
+        }
+    };
 
-    <!-- 개선점 -->
-    <div class="section">
-      <div class="section-title">개선점</div>
-      <div class="text-box" id="improveText">-</div>
-    </div>
+	function renderResult(text) {
+		document.getElementById('loading').style.display = 'none';
+		document.getElementById('content').style.display = 'block';
 
-    <button class="btn" onclick="window.location.href='index.html'">
-      다시 분석하기
-    </button>
-  </div>
+		// GPT-4o mini의 응답을 줄 단위로 쪼개어 HTML 생성
+		const sections = text.split('\n').filter(line => line.trim() !== "");
+		let html = "";
 
-  <script>
-    const imageBase64 = sessionStorage.getItem("imageBase64");
-    const result = JSON.parse(sessionStorage.getItem("analysisResult"));
-
-    if (!imageBase64 || !result) {
-      alert("결과를 불러올 수 없습니다.");
-      window.location.href = "index.html";
-    }
-
-    // 이미지 표시
-    document.getElementById("resultImage").src = imageBase64;
-
-    // 점수 표시 (샘플 구조)
-    document.getElementById("totalScore").textContent = result.totalScore;
-    document.getElementById("clothingScore").textContent = result.clothing;
-    document.getElementById("hairScore").textContent = result.hair;
-    document.getElementById("makeupScore").textContent = result.makeup;
-
-    // 바 애니메이션
-    setTimeout(() => {
-      document.getElementById("barClothing").style.width = result.clothing + "%";
-      document.getElementById("barHair").style.width = result.hair + "%";
-      document.getElementById("barMakeup").style.width = result.makeup + "%";
-    }, 200);
-
-    // 텍스트
-    document.getElementById("strengthText").textContent = result.strength;
-    document.getElementById("improveText").textContent = result.improve;
-  </script>
+		sections.forEach(line => {
+			if (line.includes("점수:")) {
+				document.getElementById('scoreValue').innerText = line.replace("점수:", "").trim();
+			} else if (line.includes("분석:") || line.includes("강점:") || line.includes("약점:")) {
+				const title = line.split(':')[0];
+				const content = line.split(':')[1];
+				html += `<div class="section">
+							<span class="section-title">${title}</span>
+							<p class="section-content">${content}</p>
+						 </div>`;
+			}
+		});
+		document.getElementById('analysisResult').innerHTML = html;
+	}
+    
+</script>
 
 </body>
-</html>

@@ -1,106 +1,56 @@
-import OpenAI from "openai";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
-
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method Not Allowed" });
-  }
+  if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
+
+  const { image } = req.body; // Base64 데이터 (data:image/jpeg;base64,...)
 
   try {
-    const { image } = req.body;
+    const apiKey = process.env.OPENAI_API_KEY; // Vercel Settings에서 설정하세요.
+    const apiUrl = "https://api.openai.com/v1/chat/completions";
 
-    if (!image) {
-      return res.status(400).json({ error: "Image is required" });
-    }
+    const prompt = `당신은 패션 전문가입니다. 다음 사진의 데일리룩 코디를 분석하세요.
+    중요 지침:
+    1. 헤어나 메이크업은 점수에 거의 반영하지 말고, 옷의 조화(색상, 핏, 스타일)에 집중하세요.
+    2. 결과는 반드시 '점수:', '분석:', '강점:', '약점:' 키워드를 포함하여 답변하세요.
+    3. 친절하고 전문적인 어조를 유지하세요.`;
 
-    /**
-     * 🔑 프롬프트 핵심
-     * - 의상 최우선
-     * - 헤어/메이크업 보조
-     * - 배경/풍경은 점수에 영향 최소
-     * - JSON ONLY 응답
-     */
-    const prompt = `
-너는 패션 스타일 전문가이자 메이크업 & 헤어 보조 평가자이다.
-
-다음 규칙을 반드시 지켜라:
-1. 의상을 가장 우선적으로 평가한다 (전체 비중 70%).
-2. 헤어와 메이크업은 보조 요소로 평가한다.
-3. 배경, 풍경, 촬영 감성은 점수에 거의 반영하지 않는다.
-4. 사진에서 사람이 명확하지 않거나 의상이 잘 보이지 않으면 감점 사유로 명시한다.
-5. 반드시 아래 JSON 형식으로만 응답한다. 다른 문장은 절대 출력하지 마라.
-
-점수 기준:
-- totalScore: 0~100
-- clothing: 0~70
-- hair: 0~15
-- makeup: 0~15
-
-응답 JSON 형식:
-{
-  "totalScore": number,
-  "clothing": number,
-  "hair": number,
-  "makeup": number,
-  "strength": "강점 설명 (의상 중심)",
-  "improve": "개선점 설명 (현실적 조언)"
-}
-`;
-
-    const response = await openai.responses.create({
-      model: "gpt-4.1-mini",
-      input: [
-        {
-          role: "user",
-          content: [
-            { type: "input_text", text: prompt },
-            { type: "input_image", image_base64: image }
-          ]
-        }
-      ]
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini", // GPT-4o mini 모델 지정
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: prompt },
+              {
+                type: "image_url",
+                image_url: {
+                  url: image // 전달받은 Base64 이미지를 직접 입력
+                }
+              }
+            ]
+          }
+        ],
+        max_tokens: 500 // 분석 결과 길이를 제한하여 비용 절감
+      })
     });
 
-    /**
-     * OpenAI 응답에서 텍스트만 추출
-     */
-    const rawText = response.output_text;
-
-    let parsed;
-    try {
-      parsed = JSON.parse(rawText);
-    } catch (e) {
-      console.error("JSON parse error:", rawText);
-
-      // ❗ AI가 형식을 깨뜨렸을 때 fallback
-      parsed = {
-        totalScore: 70,
-        clothing: 45,
-        hair: 12,
-        makeup: 13,
-        strength: "의상이 전체적으로 무난하며 안정적인 스타일을 보여줍니다.",
-        improve: "의상의 포인트가 다소 부족해 인상이 약해질 수 있습니다."
-      };
+    const data = await response.json();
+    
+    // API 호출 에러 처리
+    if (data.error) {
+      throw new Error(data.error.message);
     }
 
-    /**
-     * 🔒 서버에서 최종 점수 보정 (안전장치)
-     */
-    const total =
-      parsed.clothing +
-      parsed.hair +
-      parsed.makeup;
-
-    parsed.totalScore = Math.min(100, Math.round(total));
-
-    return res.status(200).json(parsed);
+    const resultText = data.choices[0].message.content;
+    res.status(200).json({ analysis: resultText });
 
   } catch (error) {
-    console.error("Analyze error:", error);
-    return res.status(500).json({
-      error: "Analysis failed"
-    });
+    console.error("API Error:", error);
+    res.status(500).json({ error: '분석 중 오류가 발생했습니다: ' + error.message });
   }
 }
