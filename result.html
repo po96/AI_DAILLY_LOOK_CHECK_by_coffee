@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>분석 결과 - AI Look Critic</title>
     <script src="https://cdn.tailwindcss.com"></script>
-	<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Pretendard', sans-serif; }
         body {
@@ -20,12 +20,8 @@
             border-radius: 18px; padding: 30px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.5);
         }
-
-        /* 로딩 애니메이션 */
         .pulse { animation: pulse-animation 1.5s infinite; }
-        @keyframes pulse-animation {
-            0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; }
-        }
+        @keyframes pulse-animation { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         .spinner {
             width: 50px; height: 50px;
             border: 5px solid rgba(61, 169, 252, 0.2);
@@ -34,26 +30,15 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* 결과 스타일 */
-        .score-badge {
-            background: linear-gradient(135deg, #3da9fc, #00f2fe);
-            color: #0b0f1a;
-            padding: 10px 20px; border-radius: 50px;
-            font-weight: 800; font-size: 24px;
-            display: inline-block; margin-bottom: 20px;
-        }
+        
+        /* 결과 카드 스타일 */
         .result-card {
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px; padding: 15px; margin-top: 15px;
+            border-radius: 12px; padding: 18px; margin-top: 15px;
             border-left: 4px solid #3da9fc;
+            text-align: left;
         }
-        .label { color: #3da9fc; font-weight: 700; font-size: 14px; margin-bottom: 5px; display: block; }
-        .back-btn {
-            width: 100%; margin-top: 25px; padding: 12px;
-            background: transparent; border: 1px solid #3da9fc;
-            color: #3da9fc; border-radius: 10px; cursor: pointer;
-        }
+        .label { color: #3da9fc; font-weight: 700; font-size: 15px; margin-bottom: 8px; display: block; }
     </style>
 </head>
 <body>
@@ -65,45 +50,39 @@
             <div id="info-msg" class="text-gray-400 text-sm text-center px-4">이미지의 구도를 파악하고 있습니다.</div>
         </div>
 
-
-		<div class="flex justify-center mb-8">
-			<div class="relative flex items-center justify-center">
-				<svg class="w-32 h-32 transform -rotate-90">
-					<circle cx="64" cy="64" r="58" stroke="rgba(61, 169, 252, 0.1)" stroke-width="8" fill="transparent" />
-					<circle id="score-circle" cx="64" cy="64" r="58" stroke="#3da9fc" stroke-width="8" fill="transparent" 
-						stroke-dasharray="364.4" stroke-dashoffset="364.4" stroke-linecap="round"
-						class="transition-all duration-1000 ease-out" />
-				</svg>
-				<div class="absolute text-center">
-					<span id="score-display" class="text-3xl font-extrabold text-[#3da9fc]">0</span>
-					<span class="text-sm text-[#3da9fc]">점</span>
-				</div>
-			</div>
-		</div>
-
-            <div id="analysis-content">
+        <div id="result-section" class="hidden">
+            <div class="flex justify-center mb-6">
+                <div class="relative flex items-center justify-center">
+                    <svg class="w-32 h-32 transform -rotate-90">
+                        <circle cx="64" cy="64" r="58" stroke="rgba(61, 169, 252, 0.1)" stroke-width="8" fill="transparent" />
+                        <circle id="score-circle" cx="64" cy="64" r="58" stroke="#3da9fc" stroke-width="8" fill="transparent" 
+                            stroke-dasharray="364.4" stroke-dashoffset="364.4" stroke-linecap="round"
+                            style="transition: stroke-dashoffset 1.5s ease-out;" />
+                    </svg>
+                    <div class="absolute text-center">
+                        <span id="score-display" class="text-3xl font-extrabold text-[#3da9fc]">0</span>
+                        <span class="text-sm text-[#3da9fc]">점</span>
+                    </div>
                 </div>
-			<!--전체원문추가-->
-			<div id="raw-report-section" class="mt-8 pt-6 border-t border-gray-700">
-				<details class="cursor-pointer">
-					<summary class="text-xs text-gray-500 hover:text-gray-300 transition-colors">
-						전체 분석 원문 데이터 보기 (모니터링용)
-					</summary>
-					<div id="raw-text-content" class="mt-4 p-4 bg-black/30 rounded-lg text-xs text-gray-400 leading-relaxed overflow-x-auto whitespace-pre-wrap text-left">
-						</div>
-				</details>
-			</div>
-			
-        <div class="flex gap-3 mt-8">
-			<button onclick="copyLink()" class="flex-1 py-3 border border-[#3da9fc] text-[#3da9fc] rounded-xl font-bold hover:bg-[#3da9fc]/10 transition-all">
-				🔗 링크 복사
-			</button>
-		</div>
-		<div class="flex gap-3 mt-8">
-			<button onclick="location.href='index.html'" class="flex-1 py-3 bg-[#3da9fc] text-[#0b0f1a] rounded-xl font-bold hover:shadow-[0_0_15px_rgba(61,169,252,0.4)] transition-all">
-				🔄 다시하기
-			</button>
-        </div>
+            </div>
+
+            <img id="result-img" class="w-full rounded-xl mb-6 shadow-lg border border-gray-700">
+            
+            <div id="analysis-content"></div>
+
+            <div class="flex gap-3 mt-8">
+                <button onclick="copyLink()" class="flex-1 py-3 border border-[#3da9fc] text-[#3da9fc] rounded-xl font-bold hover:bg-[#3da9fc]/10 transition-all text-sm">
+                    🔗 링크 복사
+                </button>
+                <button onclick="location.href='index.html'" class="flex-1 py-3 bg-[#3da9fc] text-[#0b0f1a] rounded-xl font-bold hover:shadow-[0_0_15px_rgba(61,169,252,0.4)] transition-all text-sm">
+                    🔄 다시하기
+                </button>
+            </div>
+
+            <details class="mt-8 pt-4 border-t border-gray-800 cursor-pointer">
+                <summary class="text-[10px] text-gray-600">Raw Data</summary>
+                <div id="raw-text-content" class="mt-2 p-3 bg-black/30 rounded text-[10px] text-gray-500 whitespace-pre-wrap text-left"></div>
+            </details>
         </div>
     </div>
 
@@ -111,30 +90,29 @@
         const infoMessages = [
             "상의와 하의의 핏을 대조하고 있어요.",
             "전체적인 컬러 밸런스를 확인 중입니다.",
-            "일상복으로서의 자연스러움을 체크하고 있어요.",
-            "더 나은 코디를 위한 팁을 정리하고 있습니다.",
-            "헤어와 메이크업의 조화를 가볍게 살펴보고 있어요."
+            "현재 스타일에 맞는 조언을 준비 중입니다."
         ];
 
         window.onload = async () => {
             const imageData = localStorage.getItem('tempImage');
-            if (!imageData) {
-                alert("이미지가 없습니다. 다시 시작해주세요.");
+            const resultImg = document.getElementById('result-img');
+
+            if (!imageData || !resultImg) {
+                alert("데이터가 없습니다. 다시 시작해주세요.");
                 location.href = 'index.html';
                 return;
             }
 
-            document.getElementById('result-img').src = imageData;
+            resultImg.src = imageData;
 
-            // 로딩 메시지 변경 타이머
             let i = 0;
             const msgTimer = setInterval(() => {
-                document.getElementById('info-msg').innerText = infoMessages[i % infoMessages.length];
+                const msgEl = document.getElementById('info-msg');
+                if(msgEl) msgEl.innerText = infoMessages[i % infoMessages.length];
                 i++;
             }, 2000);
 
             try {
-                // 실제 API 호출 (Vercel 배포 후 작동)
                 const response = await fetch('/api/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -144,85 +122,45 @@
                 const data = await response.json();
                 clearInterval(msgTimer);
                 displayResult(data.analysis);
-
             } catch (error) {
                 clearInterval(msgTimer);
-                alert("분석 중 오류가 발생했습니다.");
+                alert("분석 실패!");
                 location.href = 'index.html';
             }
         };
 
+        function displayResult(text) {
+            document.getElementById('loading-section').classList.add('hidden');
+            document.getElementById('result-section').classList.remove('hidden');
+            document.getElementById('raw-text-content').innerText = text;
 
-		function displayResult(text) {
-			document.getElementById('loading-section').classList.add('hidden');
-			document.getElementById('result-section').classList.remove('hidden');
-			document.getElementById('raw-text-content').innerText = text;
+            const contentArea = document.getElementById('analysis-content');
+            // '점수:', '분석:', '강점:', '개선점:' 등을 기준으로 나눔
+            const sections = text.split(/(?=점수:|분석:|강점:|약점:|개선점:)/g);
+            
+            let html = "";
+            sections.forEach(section => {
+                const trimmed = section.trim();
+                if (trimmed.startsWith("점수:")) {
+                    const score = (trimmed.match(/\d+(\.\d+)?/) || [0])[0];
+                    document.getElementById('score-display').innerText = score;
+                    const circle = document.getElementById('score-circle');
+                    if(circle) circle.style.strokeDashoffset = 364.4 - (364.4 * score / 100);
+                } else if (trimmed.includes(":")) {
+                    const [title, ...contentArr] = trimmed.split(":");
+                    const content = contentArr.join(":").trim()
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\n/g, '<br>');
+                    
+                    html += `<div class="result-card"><span class="label">${title}</span><div class="text-sm text-gray-200 leading-relaxed">${content}</div></div>`;
+                }
+            });
+            contentArea.innerHTML = html;
+        }
 
-			const contentArea = document.getElementById('analysis-content');
-			
-			// 1. 큰 항목(분석, 강점, 약점/개선점) 단위로 먼저 나눕니다.
-			// 보통 AI는 '항목:'으로 시작하므로 이를 기준으로 split 합니다.
-			const sections = text.split(/(?=점수:|분석:|강점:|약점:|개선점:)/g);
-			
-			let html = "";
-			
-			sections.forEach(section => {
-				const trimmed = section.trim();
-				if (!trimmed) return;
-
-				if (trimmed.startsWith("점수:")) {
-					const scoreMatch = trimmed.match(/\d+(\.\d+)?/);
-					const score = scoreMatch ? scoreMatch[0] : "0";
-					document.getElementById('score-display').innerText = score + "점";
-				} 
-				else {
-					const splitIdx = trimmed.indexOf(":");
-					if (splitIdx !== -1) {
-						const title = trimmed.substring(0, splitIdx).trim();
-						let content = trimmed.substring(splitIdx + 1).trim();
-
-						// 마크다운 형태의 강조(**)나 불렛 포인트(-)를 HTML로 간단히 치환
-						content = content
-							.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // 굵게
-							.replace(/\n-/g, '<br>•') // 불렛 포인트
-							.replace(/\n\d+\./g, '<br><strong>$&</strong>') // 숫자 목록
-							.replace(/\n/g, '<br>'); // 줄바꿈 유지
-
-						html += `
-							<div class="result-card" style="margin-bottom: 20px;">
-								<span class="label" style="font-size: 16px; margin-bottom: 10px;">${title}</span>
-								<div class="text-gray-200 text-sm leading-relaxed">${content}</div>
-							</div>
-						`;
-					}
-				}
-			});
-			
-			contentArea.innerHTML = html;
-		}
-		function copyLink() {
-			const url = window.location.href;
-			navigator.clipboard.writeText(url).then(() => {
-				// 토스트 알림이나 간단한 alert
-				alert("분석 결과 링크가 복사되었습니다! 친구에게 공유해보세요.");
-			}).catch(err => {
-				console.error('복사 실패:', err);
-			});
-		}
-		if (line.startsWith("점수:")) {
-			const scoreMatch = line.match(/\d+(\.\d+)?/);
-			const score = scoreMatch ? parseFloat(scoreMatch[0]) : 0;
-			
-			// 텍스트 업데이트
-			document.getElementById('score-display').innerText = score;
-
-			// SVG 애니메이션 업데이트 (반지름 58 기준 둘레 약 364.4)
-			const circle = document.getElementById('score-circle');
-			const offset = 364.4 - (364.4 * score / 100);
-			setTimeout(() => {
-				circle.style.strokeDashoffset = offset;
-			}, 100);
-		}
+        function copyLink() {
+            navigator.clipboard.writeText(window.location.href).then(() => alert("링크가 복사되었습니다!"));
+        }
     </script>
 </body>
 </html>
