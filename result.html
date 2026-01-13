@@ -137,37 +137,48 @@
 		function displayResult(text) {
 			document.getElementById('loading-section').classList.add('hidden');
 			document.getElementById('result-section').classList.remove('hidden');
-
-			// 1. 모니터링용 원문 데이터 삽입
 			document.getElementById('raw-text-content').innerText = text;
 
 			const contentArea = document.getElementById('analysis-content');
-			const lines = text.split('\n').filter(l => l.trim() !== "");
+			
+			// 1. 큰 항목(분석, 강점, 약점/개선점) 단위로 먼저 나눕니다.
+			// 보통 AI는 '항목:'으로 시작하므로 이를 기준으로 split 합니다.
+			const sections = text.split(/(?=점수:|분석:|강점:|약점:|개선점:)/g);
 			
 			let html = "";
-			lines.forEach(line => {
-				// 점수 처리
-				if (line.includes("점수:")) {
-					const scoreMatch = line.match(/\d+(\.\d+)?/); // 소수점 포함 숫자 추출
+			
+			sections.forEach(section => {
+				const trimmed = section.trim();
+				if (!trimmed) return;
+
+				if (trimmed.startsWith("점수:")) {
+					const scoreMatch = trimmed.match(/\d+(\.\d+)?/);
 					const score = scoreMatch ? scoreMatch[0] : "0";
 					document.getElementById('score-display').innerText = score + "점";
 				} 
-				// 항목별 카드 처리
-				else if (line.includes(":")) {
-					const splitIdx = line.indexOf(":");
-					const title = line.substring(0, splitIdx).trim();
-					const content = line.substring(splitIdx + 1).trim();
-					
-					if(content) { // 내용이 있는 경우만 카드 생성
+				else {
+					const splitIdx = trimmed.indexOf(":");
+					if (splitIdx !== -1) {
+						const title = trimmed.substring(0, splitIdx).trim();
+						let content = trimmed.substring(splitIdx + 1).trim();
+
+						// 마크다운 형태의 강조(**)나 불렛 포인트(-)를 HTML로 간단히 치환
+						content = content
+							.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // 굵게
+							.replace(/\n-/g, '<br>•') // 불렛 포인트
+							.replace(/\n\d+\./g, '<br><strong>$&</strong>') // 숫자 목록
+							.replace(/\n/g, '<br>'); // 줄바꿈 유지
+
 						html += `
-							<div class="result-card">
-								<span class="label">${title}</span>
-								<p class="text-gray-200 text-sm leading-relaxed">${content}</p>
+							<div class="result-card" style="margin-bottom: 20px;">
+								<span class="label" style="font-size: 16px; margin-bottom: 10px;">${title}</span>
+								<div class="text-gray-200 text-sm leading-relaxed">${content}</div>
 							</div>
 						`;
 					}
 				}
 			});
+			
 			contentArea.innerHTML = html;
 		}
 
