@@ -73,9 +73,17 @@
             
             <div id="analysis-content">
                 </div>
-			<button class="share-btn" onclick="saveAsImage()" style="width:100%; margin-top:15px; padding:12px; background:#3da9fc; color:#0b0f1a; border-radius:10px; font-weight:700;">
-				결과 이미지로 저장하기
-			</button>
+			<!--전체원문추가-->
+			<div id="raw-report-section" class="mt-8 pt-6 border-t border-gray-700">
+				<details class="cursor-pointer">
+					<summary class="text-xs text-gray-500 hover:text-gray-300 transition-colors">
+						전체 분석 원문 데이터 보기 (모니터링용)
+					</summary>
+					<div id="raw-text-content" class="mt-4 p-4 bg-black/30 rounded-lg text-xs text-gray-400 leading-relaxed overflow-x-auto whitespace-pre-wrap text-left">
+						</div>
+				</details>
+			</div>
+			
             <button class="back-btn" onclick="location.href='index.html'">다시 검사하기</button>
         </div>
     </div>
@@ -125,29 +133,44 @@
             }
         };
 
-        function displayResult(text) {
-            document.getElementById('loading-section').classList.add('hidden');
-            document.getElementById('result-section').classList.remove('hidden');
 
-            const contentArea = document.getElementById('analysis-content');
-            const lines = text.split('\n').filter(l => l.trim() !== "");
-            
-            let html = "";
-            lines.forEach(line => {
-                if (line.startsWith("점수:")) {
-                    document.getElementById('score-display').innerText = line.replace("점수:", "").trim();
-                } else if (line.includes(":")) {
-                    const [title, ...rest] = line.split(":");
-                    html += `
-                        <div class="result-card">
-                            <span class="label">${title.trim()}</span>
-                            <p class="text-gray-200 text-sm leading-relaxed">${rest.join(":").trim()}</p>
-                        </div>
-                    `;
-                }
-            });
-            contentArea.innerHTML = html;
-        }
+		function displayResult(text) {
+			document.getElementById('loading-section').classList.add('hidden');
+			document.getElementById('result-section').classList.remove('hidden');
+
+			// 1. 모니터링용 원문 데이터 삽입
+			document.getElementById('raw-text-content').innerText = text;
+
+			const contentArea = document.getElementById('analysis-content');
+			const lines = text.split('\n').filter(l => l.trim() !== "");
+			
+			let html = "";
+			lines.forEach(line => {
+				// 점수 처리
+				if (line.includes("점수:")) {
+					const scoreMatch = line.match(/\d+(\.\d+)?/); // 소수점 포함 숫자 추출
+					const score = scoreMatch ? scoreMatch[0] : "0";
+					document.getElementById('score-display').innerText = score + "점";
+				} 
+				// 항목별 카드 처리
+				else if (line.includes(":")) {
+					const splitIdx = line.indexOf(":");
+					const title = line.substring(0, splitIdx).trim();
+					const content = line.substring(splitIdx + 1).trim();
+					
+					if(content) { // 내용이 있는 경우만 카드 생성
+						html += `
+							<div class="result-card">
+								<span class="label">${title}</span>
+								<p class="text-gray-200 text-sm leading-relaxed">${content}</p>
+							</div>
+						`;
+					}
+				}
+			});
+			contentArea.innerHTML = html;
+		}
+
     </script>
 </body>
 </html>
