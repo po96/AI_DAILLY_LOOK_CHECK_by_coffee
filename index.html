@@ -87,37 +87,62 @@
     </div>
 
     <script>
-        function previewImage(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const display = document.getElementById('image-display');
-                    // 미리보기 이미지 생성
-                    display.innerHTML = `<img id="uploaded-img" src="${e.target.result}" class="w-full h-auto max-h-80 object-contain">`;
-                    // 분석을 위해 이미지를 localStorage에 저장
-                    localStorage.setItem('tempImage', e.target.result);
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                // Canvas를 이용한 이미지 압축
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
+                // 최대 너비를 800px로 설정 (용량 최적화)
+                const maxWidth = 800;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth) {
+                    height = (maxWidth * height) / width;
+                    width = maxWidth;
                 }
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-        
-        function handleAnalysis() {
-            const btn = document.getElementById('analyze-btn');
-            const img = document.getElementById('uploaded-img');
 
-            if (!img) {
-                alert("먼저 사진을 업로드해주세요!");
-                return;
-            }
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
 
-            // UI 피드백
-            btn.disabled = true;
-            btn.innerText = "분석 준비 중...";
+                // 압축된 Base64 데이터 생성 (품질 0.7)
+                const compressedData = canvas.toDataURL('image/jpeg', 0.7);
 
-            // 결과 페이지(result.html)로 이동
-            // 실제 분석 로직은 result.html에서 수행하게 됩니다.
-            window.location.href = 'result.html';
-        }
+                const display = document.getElementById('image-display');
+                display.innerHTML = `<img id="uploaded-img" src="${compressedData}" class="w-full h-auto max-h-80 object-contain">`;
+                
+                // 압축된 데이터를 저장 (용량 초과 에러 방지)
+                try {
+                    localStorage.setItem('tempImage', compressedData);
+                } catch (e) {
+                    alert("이미지 용량이 너무 커서 저장에 실패했습니다. 다른 사진을 선택해주세요.");
+                }
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function handleAnalysis() {
+    const btn = document.getElementById('analyze-btn');
+    const imageData = localStorage.getItem('tempImage');
+
+    if (!imageData) {
+        alert("먼저 사진을 업로드해주세요!");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = "분석 준비 중...";
+    window.location.href = 'result.html';
+}
     </script>
 </body>
 </html>
