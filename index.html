@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI 스타일 평가</title>
+
+  <!-- 구글 폰트 (샘플용) -->
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===== 기본 리셋 ===== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Pretendard', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #0f2027, #0b0f1a);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #ffffff;
+    }
+
+    /* ===== 메인 카드 ===== */
+    .container {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(20, 30, 50, 0.85);
+      border-radius: 18px;
+      padding: 32px 28px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      text-align: center;
+    }
+
+    .title {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #b8c4d6;
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
+
+    /* ===== 업로드 영역 ===== */
+	.upload-box {
+	  display: block;
+	  box-sizing: border-box;
+	  border: 2px dashed #38bdf8;
+	  border-radius: 18px;
+	  padding: 28px 20px;
+	  cursor: pointer;
+	  transition: background 0.3s, border-color 0.3s;
+	}
+
+    .upload-box:hover {
+      background: rgba(61,169,252,0.08);
+    }
+
+    .upload-text {
+      font-size: 14px;
+      color: #d6e6ff;
+    }
+
+    .upload-text span {
+      color: #3da9fc;
+      font-weight: 600;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    /* ===== 미리보기 ===== */
+    .preview {
+      margin-top: 18px;
+      display: none;
+    }
+
+	.preview img {
+	  display: block;
+	  width: 100%;
+	  max-height: 320px;
+	  object-fit: cover;
+	  border-radius: 12px;
+	}
+
+    /* ===== 옵션 ===== */
+    .options {
+      margin-top: 22px;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    .options label {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+
+    .options input {
+      margin-right: 8px;
+    }
+
+    /* ===== 버튼 ===== */
+    .analyze-btn {
+      width: 100%;
+      margin-top: 24px;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #3da9fc, #00f2fe);
+      color: #0b0f1a;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .analyze-btn:disabled {
+      background: #555;
+      cursor: not-allowed;
+      color: #ccc;
+    }
+
+    .analyze-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(61,169,252,0.4);
+    }
+
+    /* ===== 푸터 ===== */
+    .footer {
+      margin-top: 18px;
+      font-size: 12px;
+      color: #8fa3c8;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <div class="title">AI 스타일 평가</div>
+    <div class="subtitle">
+      의상을 중심으로<br>
+      헤어 & 메이크업을 함께 분석합니다
+    </div>
+
+    <!-- 업로드 -->
+
+	<label class="upload-box">
+	  <input type="file" id="imageInput" />
+
+	  <div class="upload-text" id="uploadText">
+		사진을 업로드하세요<br>
+		<span>클릭 또는 드래그</span>
+	  </div>
+
+	  <!-- 🔥 여기로 이동 -->
+	  <div class="preview" id="preview">
+		<img id="previewImg" />
+	  </div>
+	</label>
+
+
+    <!-- 옵션 -->
+    <div class="options">
+      <label>
+        <input type="checkbox" checked disabled />
+        의상 평가 (필수)
+      </label>
+      <label>
+        <input type="checkbox" checked />
+        헤어 평가
+      </label>
+      <label>
+        <input type="checkbox" checked />
+        메이크업 평가
+      </label>
+    </div>
+
+    <!-- 분석 버튼 -->
+    <button class="analyze-btn" id="analyzeBtn" disabled>
+      분석 시작
+    </button>
+
+    <div class="footer">
+      AI 기반 스타일 분석 · 업로드 된 사진은 저장되지 않습니다
+    </div>
+  </div>
+
+  <script>
+    const imageInput = document.getElementById("imageInput");
+    const preview = document.getElementById("preview");
+    const previewImg = document.getElementById("previewImg");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+
+    imageInput.addEventListener("change", () => {
+      const file = imageInput.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        previewImg.src = reader.result;
+        preview.style.display = "block";
+        analyzeBtn.disabled = false;
+
+        // 👉 다음 단계에서 이걸 sessionStorage에 저장
+        sessionStorage.setItem("imageBase64", reader.result);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    analyzeBtn.addEventListener("click", () => {
+      // 다음 페이지로 이동
+      window.location.href = "loading.html";
+    });
+  </script>
+
+</body>
+</html>

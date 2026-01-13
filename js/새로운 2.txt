@@ -1,0 +1,93 @@
+🤖 Teachable Machine을 이용한 동물 매칭 AI 구축
+
+Teachable Machine을 사용하는 전체 과정은 크게 데이터 수집 및 학습, 모델 내보내기, 그리고 웹페이지 연동의 3단계로 나눌 수 있습니다.
+1단계: 데이터 수집 및 학습
+
+우리가 정의한 매칭 규칙(match_tag)에 따라 12가지 또는 16가지의 **"클래스(Class)"**를 정의하고 학습시킬 이미지를 수집합니다.
+클래스 (Class) 이름	매칭 규칙 (match_tag)	설명
+Class 1: 토끼 타입	round_eyes_soft_smile	눈이 크고 순하며, 입꼬리가 살짝 올라간 인상의 사진들
+Class 2: 여우 타입	sharp_eyes_slim_face	눈매가 날카롭고 얼굴형이 갸름한 인상의 사진들
+Class 3: 호랑이 타입	strong_jaw_gaze	턱선이 듬직하고 카리스마 있는 눈빛의 사진들
+... (나머지 9~13개 클래스)	(각 동물 캐릭터에 맞는 얼굴 특징)	
+
+학습 데이터:
+
+    각 클래스마다 최소 50장 이상의 다양한 인물 사진을 준비해야 합니다. (눈, 코, 입 가이드라인을 지키는 사진)
+
+    사진 업로드 후, Teachable Machine에서 **모델 학습(Train Model)**을 실행합니다.
+
+2단계: 모델 내보내기 (Export)
+
+학습이 완료되면, 모델을 웹에서 사용할 수 있도록 내보냅니다.
+
+    Export Model 버튼을 클릭합니다.
+
+    TensorFlow.js 탭을 선택하고 **'Upload my model'**을 클릭합니다.
+
+    구글 서버에 모델이 업로드되면, **'Sharable Link'**와 모델을 웹페이지에 통합하기 위한 코드 스니펫이 제공됩니다.
+
+3단계: 웹페이지 연동 (JavaScript Code)
+
+결과 페이지(result.html)로 넘어가기 전, 사진을 분석하는 과정에 이 모델 코드를 삽입합니다.
+🔗 연동에 필요한 핵심 코드
+
+이 코드는 startAnalysis() 함수에 통합하여 사용하면 됩니다.
+JavaScript
+
+// Teachable Machine에서 제공하는 모델 URL (예시)
+const URL = "https://teachablemachine.withgoogle.com/models/YOUR_MODEL_ID/"; 
+
+let model, webcam, maxPredictions;
+
+// 1. 모델 로드 (웹페이지 로드 시 미리 실행하면 좋음)
+async function init() {
+    const modelURL = URL + "model.json";
+    const metadataURL = URL + "metadata.json";
+
+    model = await tmImage.load(modelURL, metadataURL);
+    maxPredictions = model.getTotalClasses();
+    // 모델 로드 완료!
+}
+
+// 2. 분석 시작 및 결과 예측
+async function startAnalysis() {
+    const uploadedImage = document.getElementById('uploaded-img'); // 사용자가 업로드한 이미지 DOM 요소
+    
+    if (!model) {
+        alert("모델 로드 중입니다. 잠시 후 다시 시도해주세요.");
+        return;
+    }
+
+    // 예측 실행
+    const prediction = await model.predict(uploadedImage);
+    
+    // 가장 높은 확률의 클래스 찾기
+    let maxProbability = 0;
+    let predictedClass = ""; 
+
+    for (let i = 0; i < maxPredictions; i++) {
+        const probability = prediction[i].probability.toFixed(2) * 100;
+        const className = prediction[i].className; // 예: "토끼 타입"
+
+        if (probability > maxProbability) {
+            maxProbability = probability;
+            predictedClass = className;
+        }
+    }
+    
+    // 3. 결과 페이지로 이동하며 데이터 전달
+    if (predictedClass) {
+        const percent = Math.floor(maxProbability);
+        
+        // 중요: predictedClass(예: "토끼 타입")를 데이터베이스(JSON)의 match_tag와 연결해야 합니다.
+        window.location.href = `result.html?animal=${predictedClass}&match_perc=${percent}`;
+    }
+}
+
+💡 다음 단계
+
+이 과정을 통해 사진을 업로드하면 AI가 분석하고 결과를 퍼센트와 함께 알려주는 시스템이 완성됩니다.
+
+이제 남은 것은 **결과 페이지(result.html)**에서 URL 파라미터를 받아와 (예: ?animal=토끼%20타입&match_perc=85) JSON 데이터와 매칭하여 최종 정보를 화면에 표시하는 것입니다.
+
+마지막으로, 결과 페이지에서 URL 파라미터와 JSON 데이터를 연결하여 화면에 출력하는 자바스크립트 코드를 정리해 드릴까요?

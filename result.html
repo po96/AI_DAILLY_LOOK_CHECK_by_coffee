@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>분석 결과</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Pretendard', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #0f2027, #0b0f1a);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #ffffff;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(20, 30, 50, 0.85);
+      border-radius: 18px;
+      padding: 28px 24px 32px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+
+    .title {
+      text-align: center;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 18px;
+    }
+
+    /* ===== 점수 ===== */
+    .score-box {
+      text-align: center;
+      margin-bottom: 22px;
+    }
+
+    .score {
+      font-size: 52px;
+      font-weight: 700;
+      color: #38bdf8;
+    }
+
+    .score-label {
+      font-size: 14px;
+      color: #b8c4d6;
+    }
+
+    /* ===== 이미지 ===== */
+    .image-box {
+      margin-bottom: 22px;
+    }
+
+    .image-box img {
+      width: 100%;
+      display: block;
+      border-radius: 14px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+    }
+
+    /* ===== 카테고리 점수 ===== */
+    .category {
+      margin-bottom: 18px;
+    }
+
+    .category-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .bar {
+      height: 8px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #38bdf8, #0ea5e9);
+      width: 0%;
+      transition: width 0.6s ease;
+    }
+
+    /* ===== 텍스트 평가 ===== */
+    .section {
+      margin-top: 22px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .text-box {
+      background: rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #d6e6ff;
+    }
+
+    /* ===== 버튼 ===== */
+    .btn {
+      width: 100%;
+      margin-top: 24px;
+      padding: 14px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+      color: #0b0f1a;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <div class="title">분석 결과</div>
+
+    <!-- 총점 -->
+    <div class="score-box">
+      <div class="score" id="totalScore">--</div>
+      <div class="score-label">총점</div>
+    </div>
+
+    <!-- 이미지 -->
+    <div class="image-box">
+      <img id="resultImage" />
+    </div>
+
+    <!-- 카테고리 점수 -->
+    <div class="category">
+      <div class="category-title">
+        <span>의상</span>
+        <span id="clothingScore">--</span>
+      </div>
+      <div class="bar">
+        <div class="bar-fill" id="barClothing"></div>
+      </div>
+    </div>
+
+    <div class="category">
+      <div class="category-title">
+        <span>헤어</span>
+        <span id="hairScore">--</span>
+      </div>
+      <div class="bar">
+        <div class="bar-fill" id="barHair"></div>
+      </div>
+    </div>
+
+    <div class="category">
+      <div class="category-title">
+        <span>메이크업</span>
+        <span id="makeupScore">--</span>
+      </div>
+      <div class="bar">
+        <div class="bar-fill" id="barMakeup"></div>
+      </div>
+    </div>
+
+    <!-- 강점 -->
+    <div class="section">
+      <div class="section-title">강점</div>
+      <div class="text-box" id="strengthText">-</div>
+    </div>
+
+    <!-- 개선점 -->
+    <div class="section">
+      <div class="section-title">개선점</div>
+      <div class="text-box" id="improveText">-</div>
+    </div>
+
+    <button class="btn" onclick="window.location.href='index.html'">
+      다시 분석하기
+    </button>
+  </div>
+
+  <script>
+    const imageBase64 = sessionStorage.getItem("imageBase64");
+    const result = JSON.parse(sessionStorage.getItem("analysisResult"));
+
+    if (!imageBase64 || !result) {
+      alert("결과를 불러올 수 없습니다.");
+      window.location.href = "index.html";
+    }
+
+    // 이미지 표시
+    document.getElementById("resultImage").src = imageBase64;
+
+    // 점수 표시 (샘플 구조)
+    document.getElementById("totalScore").textContent = result.totalScore;
+    document.getElementById("clothingScore").textContent = result.clothing;
+    document.getElementById("hairScore").textContent = result.hair;
+    document.getElementById("makeupScore").textContent = result.makeup;
+
+    // 바 애니메이션
+    setTimeout(() => {
+      document.getElementById("barClothing").style.width = result.clothing + "%";
+      document.getElementById("barHair").style.width = result.hair + "%";
+      document.getElementById("barMakeup").style.width = result.makeup + "%";
+    }, 200);
+
+    // 텍스트
+    document.getElementById("strengthText").textContent = result.strength;
+    document.getElementById("improveText").textContent = result.improve;
+  </script>
+
+</body>
+</html>
