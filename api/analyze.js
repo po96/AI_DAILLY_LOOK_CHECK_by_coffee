@@ -7,12 +7,13 @@ export default async function handler(req, res) {
     const apiKey = process.env.OPENAI_API_KEY; // Vercel Settings에서 설정하세요.
     const apiUrl = "https://api.openai.com/v1/chat/completions";
 
-    const prompt = `당신은 패션 전문가입니다. 다음 사진의 데일리룩 코디를 분석하세요.
+    const prompt = `당신은 패션 전문가입니다. 다음 사진의 데일리룩 코디를 분석해서 상세하게 설명해주세요.
     중요 지침:
     1. 헤어나 메이크업은 점수에 거의 반영하지 말고, 옷의 조화(색상, 핏, 스타일)에 집중하세요.
     2. 결과는 반드시 '점수:', '분석:', '강점:', '개선점:' 키워드를 포함하여 답변하세요.
     3. 친절하고 전문적인 어조를 유지하세요.
-	4. 점수는 (0 ~ 100)/100로 작성해주세요.`;
+	4. 점수는 (0 ~ 100)/100로 작성해주세요.
+	5. 요약정보나 재 질문은 필요없어요.`;
 
 
     const response = await fetch(apiUrl, {
