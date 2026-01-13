@@ -1,90 +1,151 @@
+<!DOCTYPE html>
+<html lang="ko">
 <head>
-    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>분석 결과 - AI Look Critic</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Pretendard', sans-serif; }
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at top, #0f2027, #0b0f1a);
+            display: flex; justify-content: center; align-items: center;
+            color: #ffffff; padding: 20px;
+        }
+        .container {
+            width: 100%; max-width: 420px;
+            background: rgba(20, 30, 50, 0.95);
+            border-radius: 18px; padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        /* 로딩 애니메이션 */
+        .pulse { animation: pulse-animation 1.5s infinite; }
+        @keyframes pulse-animation {
+            0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; }
+        }
+        .spinner {
+            width: 50px; height: 50px;
+            border: 5px solid rgba(61, 169, 252, 0.2);
+            border-top: 5px solid #3da9fc;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* 결과 스타일 */
+        .score-badge {
+            background: linear-gradient(135deg, #3da9fc, #00f2fe);
+            color: #0b0f1a;
+            padding: 10px 20px; border-radius: 50px;
+            font-weight: 800; font-size: 24px;
+            display: inline-block; margin-bottom: 20px;
+        }
+        .result-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px; padding: 15px; margin-top: 15px;
+            border-left: 4px solid #3da9fc;
+        }
+        .label { color: #3da9fc; font-weight: 700; font-size: 14px; margin-bottom: 5px; display: block; }
+        .back-btn {
+            width: 100%; margin-top: 25px; padding: 12px;
+            background: transparent; border: 1px solid #3da9fc;
+            color: #3da9fc; border-radius: 10px; cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <div id="loading">코디 분석 중...</div>
-        
-        <div id="content" style="display:none;">
-            <div class="image-box">
-                <img id="preview">
-            </div>
 
-            <div class="score-box">
-                <div id="scoreValue" class="score-text">0점</div>
-            </div>
+    <div class="container" id="main-container">
+        <div id="loading-section" class="flex flex-col items-center py-10">
+            <div class="spinner mb-6"></div>
+            <div class="pulse text-xl font-bold text-[#3da9fc] mb-2">스타일 분석 중...</div>
+            <div id="info-msg" class="text-gray-400 text-sm text-center px-4">이미지의 구도를 파악하고 있습니다.</div>
+        </div>
 
-            <div id="analysisResult"></div>
+        <div id="result-section" class="hidden">
+            <div class="text-center">
+                <div id="score-display" class="score-badge">0점</div>
+                <img id="result-img" class="w-full rounded-xl mb-6 shadow-lg border border-gray-700">
+            </div>
+            
+            <div id="analysis-content">
+                </div>
+
+            <button class="back-btn" onclick="location.href='index.html'">다시 검사하기</button>
         </div>
     </div>
-<div id="loading">
-    <div class="loading-spinner"></div>
-    <div class="pulsing-text">AI 패션 전문가가 분석 중입니다...</div>
-    <div id="infoMessage" class="info-message">이미지의 핏을 분석하고 있어요.</div>
-</div>
+
     <script>
+        const infoMessages = [
+            "상의와 하의의 핏을 대조하고 있어요.",
+            "전체적인 컬러 밸런스를 확인 중입니다.",
+            "일상복으로서의 자연스러움을 체크하고 있어요.",
+            "더 나은 코디를 위한 팁을 정리하고 있습니다.",
+            "헤어와 메이크업의 조화를 가볍게 살펴보고 있어요."
+        ];
 
-    // 로딩 중 보여줄 랜덤 메시지들
-    const messages = [
-        "상의와 하의의 실루엣을 비교하고 있어요.",
-        "전체적인 색상 조화를 체크하는 중입니다.",
-        "디테일한 액세서리 포인트를 분석하고 있어요.",
-        "현재 스타일에 맞는 최적의 조언을 준비 중입니다.",
-        "헤어보다는 옷의 핏에 더 집중하고 있어요."
-    ];
+        window.onload = async () => {
+            const imageData = localStorage.getItem('tempImage');
+            if (!imageData) {
+                alert("이미지가 없습니다. 다시 시작해주세요.");
+                location.href = 'index.html';
+                return;
+            }
 
-    window.onload = async () => {
-        const imageData = localStorage.getItem('tempImage');
-        document.getElementById('preview').src = imageData;
+            document.getElementById('result-img').src = imageData;
 
-        // 메시지 변경 타이머 시작
-        let msgIndex = 0;
-        const msgInterval = setInterval(() => {
-            msgIndex = (msgIndex + 1) % messages.length;
-            document.getElementById('infoMessage').innerText = messages[msgIndex];
-        }, 2000);
+            // 로딩 메시지 변경 타이머
+            let i = 0;
+            const msgTimer = setInterval(() => {
+                document.getElementById('info-msg').innerText = infoMessages[i % infoMessages.length];
+                i++;
+            }, 2000);
 
-        try {
-            const response = await fetch('/api/analyze', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image: imageData })
-            });
+            try {
+                // 실제 API 호출 (Vercel 배포 후 작동)
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: imageData })
+                });
 
-            const data = await response.json();
+                const data = await response.json();
+                clearInterval(msgTimer);
+                displayResult(data.analysis);
+
+            } catch (error) {
+                clearInterval(msgTimer);
+                alert("분석 중 오류가 발생했습니다.");
+                location.href = 'index.html';
+            }
+        };
+
+        function displayResult(text) {
+            document.getElementById('loading-section').classList.add('hidden');
+            document.getElementById('result-section').classList.remove('hidden');
+
+            const contentArea = document.getElementById('analysis-content');
+            const lines = text.split('\n').filter(l => l.trim() !== "");
             
-            // 데이터 수신 후 타이머 중지 및 결과 렌더링
-            clearInterval(msgInterval);
-            renderResult(data.analysis);
-        } catch (error) {
-            clearInterval(msgInterval);
-            alert("분석 실패! 다시 시도해주세요.");
+            let html = "";
+            lines.forEach(line => {
+                if (line.startsWith("점수:")) {
+                    document.getElementById('score-display').innerText = line.replace("점수:", "").trim();
+                } else if (line.includes(":")) {
+                    const [title, ...rest] = line.split(":");
+                    html += `
+                        <div class="result-card">
+                            <span class="label">${title.trim()}</span>
+                            <p class="text-gray-200 text-sm leading-relaxed">${rest.join(":").trim()}</p>
+                        </div>
+                    `;
+                }
+            });
+            contentArea.innerHTML = html;
         }
-    };
-
-	function renderResult(text) {
-		document.getElementById('loading').style.display = 'none';
-		document.getElementById('content').style.display = 'block';
-
-		// GPT-4o mini의 응답을 줄 단위로 쪼개어 HTML 생성
-		const sections = text.split('\n').filter(line => line.trim() !== "");
-		let html = "";
-
-		sections.forEach(line => {
-			if (line.includes("점수:")) {
-				document.getElementById('scoreValue').innerText = line.replace("점수:", "").trim();
-			} else if (line.includes("분석:") || line.includes("강점:") || line.includes("약점:")) {
-				const title = line.split(':')[0];
-				const content = line.split(':')[1];
-				html += `<div class="section">
-							<span class="section-title">${title}</span>
-							<p class="section-content">${content}</p>
-						 </div>`;
-			}
-		});
-		document.getElementById('analysisResult').innerHTML = html;
-	}
-    
-</script>
-
+    </script>
 </body>
+</html>
