@@ -23,7 +23,12 @@ export default async function handler(req, res) {
 		   - 실질적인 개선 대안(아이템, 컬러, 핏 등)
 		   을 함께 제시하세요.
 		6. 친절하지만 패션 전문가다운 전문적인 어조를 유지하세요.
-	    7. 요약정보나 재 질문은 필요없어요.`;
+	    7. 요약정보나 재 질문은 필요없어요.
+		- totalScore: 0~100
+		- clothing: 0~80
+		- hair: 0~10
+		- makeup: 0~10
+		`;
 
 
     const response = await fetch(apiUrl, {
